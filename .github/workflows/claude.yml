@@ -23,7 +23,7 @@ jobs:
       pull-requests: read
       issues: read
       id-token: write
-      actions: read # Required for Claude to read CI results on PRs
+      actions: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,7 +33,7 @@ jobs:
       - name: Project Setup
         run: |
           npm run setup
-          npm run dev:daemon    
+          npm run dev:daemon
 
       - name: Run Claude Code
         id: claude
@@ -41,29 +41,19 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
 
-          custom_instructions: |
+          prompt: |
             The project is already set up with all dependencies installed.
-            The server is already running at localhost:3000. Logs from it
-            are being written to logs.txt. If needed, you can query the
-            db with the 'sqlite3' cli. If needed, use the mcp__playwright
-            set of tools to launch a browser and interact with the app.
+            The server is already running at http://localhost:3000.
+            Logs are being written to logs.txt.
 
-          mcp_config: |
-            {
-              "mcpServers": {
-                "playwright": {
-                  "command": "npx",
-                  "args": [
-                    "@playwright/mcp@latest",
-                    "--allowed-origins",
-                    "localhost:3000;cdn.tailwindcss.com;esm.sh"
-                  ]
-                }
-              }
-            }
+            Please investigate the issue mentioned in the GitHub thread.
+            Test whether clicking the Code and Preview tabs correctly toggles between views.
+            If needed, inspect logs.txt and use sqlite3 for local DB inspection.
 
-          allowed_tools: "Bash(npm:*),Bash(sqlite3:*),mcp__playwright__browser_snapshot,mcp__playwright__browser_click,..."
+          claude_args: |
+            --system-prompt "Use Playwright MCP when browser interaction is needed. The app is already running on localhost:3000."
+            --mcp-config '{"mcpServers":{"playwright":{"command":"npx","args":["@playwright/mcp@latest","--allowed-origins","localhost:3000;cdn.tailwindcss.com;esm.sh"]}}}'
+            --allowedTools 'Bash(npm:*),Bash(sqlite3:*),mcp__playwright__browser_navigate,mcp__playwright__browser_snapshot,mcp__playwright__browser_click,mcp__playwright__browser_type,mcp__playwright__browser_press_key,mcp__playwright__browser_wait_for,mcp__playwright__browser_evaluate,mcp__playwright__browser_take_screenshot,mcp__playwright__browser_console_messages,mcp__playwright__browser_network_requests,mcp__playwright__browser_close'
 
-          # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
             actions: read
