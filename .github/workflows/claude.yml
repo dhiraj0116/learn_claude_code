@@ -20,10 +20,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
-      issues: read
+      pull-requests: write
+      issues: write
       id-token: write
       actions: read
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,17 +42,8 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
 
-          prompt: |
-            The project is already set up with all dependencies installed.
-            The server is already running at http://localhost:3000.
-            Logs are being written to logs.txt.
-
-            Please investigate the issue mentioned in the GitHub thread.
-            Test whether clicking the Code and Preview tabs correctly toggles between views.
-            If needed, inspect logs.txt and use sqlite3 for local DB inspection.
-
           claude_args: |
-            --system-prompt "Use Playwright MCP when browser interaction is needed. The app is already running on localhost:3000."
+            --system-prompt "The project is already set up with all dependencies installed. The server is already running at http://localhost:3000. Logs are being written to logs.txt. Use Playwright MCP when browser interaction is needed. If needed, inspect logs.txt and use sqlite3 for local DB inspection."
             --mcp-config '{"mcpServers":{"playwright":{"command":"npx","args":["@playwright/mcp@latest","--allowed-origins","localhost:3000;cdn.tailwindcss.com;esm.sh"]}}}'
             --allowedTools 'Bash(npm:*),Bash(sqlite3:*),mcp__playwright__browser_navigate,mcp__playwright__browser_snapshot,mcp__playwright__browser_click,mcp__playwright__browser_type,mcp__playwright__browser_press_key,mcp__playwright__browser_wait_for,mcp__playwright__browser_evaluate,mcp__playwright__browser_take_screenshot,mcp__playwright__browser_console_messages,mcp__playwright__browser_network_requests,mcp__playwright__browser_close'
 
